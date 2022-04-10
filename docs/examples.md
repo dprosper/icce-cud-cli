@@ -6,9 +6,23 @@ code to [Code Engine](https://cloud.ibm.com/codeengine), a fully managed serverl
 
 #### Create a project in Code Engine workflow
 
-This example will create a project in Code Engine and deploy an app naming the project/app based on the pull request sha. The action takes additional input from a `json` file located in the same directory as the workflow file.  If a the `icce-project-config.json` is found it is processed, currently it supports creating confirmaps only.  
+This example will build a new image from the source, create a project in Code Engine and deploy an app.   naming the project/app based on the pull request sha. It does the following:
+    * Builds a new image and tags it with the sha from the PR
+    * Create a project and an app naimg themn based on the sha from the PR
+    * Deploy the app and insert the URL to the deployed app in a comment of the PR
+The action can take additional input from a `json` file located in the same directory as the workflow file.  If a the `icce-project-config.json` is found it is processed, currently it supports creating configmaps only.  
 
 ```yml
+      - name: Build and push image
+        uses: docker/build-push-action@v2.8.0
+        with:
+          context: ./
+          file: ./frontend-api/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags:  ${{ env.REGISTRY_ORG_NAMESPACE }}/${{ env.REGISTRY_REPOSITORY }}:${{ github.event.pull_request.head.sha }}
+          labels: ${{ steps.meta.outputs.labels }}
+
       - name: Deploy to IBM Cloud Code Engine
         uses: dprosper/icce-cud-cli@v0.2.0
         with:
@@ -20,10 +34,11 @@ This example will create a project in Code Engine and deploy an app naming the p
           CE_APP_NAME: app-${{ github.event.pull_request.head.sha }}
 ```
 
-![](./docs/assets/icce-cud-create-running.png)
+![](./assets/icce-cud-create-running.png)
 
 
-![](./docs/assets/icce-cud-create-success.png)
+At completion of the run a link to the application is added to the PR so that it can be used for testing.
+![](./assets/icce-cud-create-success.png)
 
 
 
@@ -39,12 +54,16 @@ This example will delete a project in Code Engine.  On delete failures it will c
           CE_PROJECT_NAME: project-${{ github.event.pull_request.head.sha }}
           CE_ACTION: delete
 ```
-![](./docs/assets/icce-cud-delete-update-success.png)
+![](./assets/icce-cud-delete-update-success.png)
 
 
 #### Update a project in Code Engine workflow
 
-This example will update a project in Code Engine.  On update failures it will create a comment inside the PR and it will generate an issue.  
+This example will update a project in Code Engine.  It does the following: 
+    * Tags the container image that was previously tagged with the sha from the PR with the latest tag. 
+    * Updates the application specified with the latest image. 
+
+On update failures it will create a comment inside the PR and it will generate an issue. You can use this for example to update a production application after the PR is merged. 
 
 ```yml
       - name: Update in IBM Cloud Code Engine
@@ -56,4 +75,4 @@ This example will update a project in Code Engine.  On update failures it will c
           CE_ACTION: update
 ```
 
-![](./docs/assets/icce-cud-delete-update-failed.png)
+![](./assets/icce-cud-delete-update-failed.png)
