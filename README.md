@@ -6,7 +6,7 @@ A GitHub action to deploy an application to IBM Cloud Code Engine.
 
 ```yml
       - name: Deploy to IBM Cloud Code Engine
-        uses: dprosper/icce-cud-cli@v1
+        uses: dprosper/icce-cud-cli@v0.2.0
         with:
           IMAGE: ${{ env.REGISTRY_ORG_NAMESPACE }}/${{ env.REGISTRY_REPOSITORY }}:${{ github.event.pull_request.head.sha }}
           REGISTRY_USER: ${{ secrets.DOCKERHUB_USER }}
@@ -39,7 +39,7 @@ A GitHub action to deploy an application to IBM Cloud Code Engine.
 
 ## Versioning
 
-For this action you can lock the version to use by specifying it like this: `dprosper/ic-cud-cli@v1`. 
+For this action you can lock the version to use by specifying it like this: `dprosper/ic-cud-cli@v0.2.0`. 
 
 ## License
 
