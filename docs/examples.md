@@ -37,7 +37,8 @@ The action can take additional input from a `json` file located in the same dire
 ![](./assets/icce-cud-create-running.png)
 
 
-At completion of the run a link to the application is added to the PR so that it can be used for testing.
+- At completion of the run a link to the application is added to the PR so that it can be used for testing.
+
 ![](./assets/icce-cud-create-success.png)
 
 
