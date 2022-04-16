@@ -66,7 +66,7 @@ set +o errexit
 ibmcloud code-engine app create \
 --name "$CE_APP_NAME" \
 --image "$IMAGE" \
---port 3000 \
+--port "$APP_PORT" \
 ${p_registry_secret} \
 ${p_mount_configmap} \
 --wait \

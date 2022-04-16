@@ -51,7 +51,11 @@ inputs:
     description: Code Engine Application name 
     required: false
     default: demo-app
-
+  APP_PORT:
+    description: Port number used by application 
+    required: false
+    default: 3000
+    
 outputs:
   url:
     description: 'url of newly deployed app'
