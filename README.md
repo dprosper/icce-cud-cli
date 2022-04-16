@@ -30,6 +30,7 @@ A GitHub action to deploy an application to IBM Cloud Code Engine.
 | `CE_ACTION` | Determines the steps to run in the action, `create`, `update` or `delete`. | |
 | `CE_PROJECT_NAME` | The name of the project. Use a name that is unique within the region. | `demo-project` |
 | `CE_APP_NAME` | The name of the application. Use a name that is unique within the project. | `demo-app` |
+| `APP_PORT` | The port used by the application. | `3000` |
 
 > Note: Only the IBM Cloud official plug-in repository is supported in this action.
 
