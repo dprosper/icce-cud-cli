@@ -57,8 +57,23 @@ if [ -f .github/workflows/icce-project-config.json ]; then
 
      p_mount_configmap="--mount-configmap $path=$name"
     done
+
+    secrets=$(jq -c '.secretsfromfile[]?' .github/workflows/icce-project-config.json)
+    for secret in $secrets; do
+      name=$(echo ${secret} | jq -r '.name | select (.!=null)')
+      file=$(echo ${secret} | jq -r '.file | select (.!=null)')
+      path=$(echo ${secret} | jq -r '.path | select (.!=null)')
+
+      set +o errexit
+      ibmcloud code-engine secret create --name "$name" --from-file "$file"
+      [ $? -ne 0 ] && echo "Error during secret create" && exit 1
+      set -o errexit
+
+     p_mount_secret="--mount-secret $path=$name"
+    done
+
   else
-    echo "Failed to create configmap from icce-project-config.json, either the file failed json parsing or something else went wrong." && exit 1
+    echo "Failed to use icce-project-config.json, either the file failed json parsing or something else went wrong." && exit 1
   fi
 fi
 
@@ -69,6 +84,7 @@ ibmcloud code-engine app create \
 --port "$APP_PORT" \
 ${p_registry_secret} \
 ${p_mount_configmap} \
+${p_mount_secret} \
 --wait \
 --wait-timeout 120
 [ $? -ne 0 ] && echo "Error encountered during app create, printing events and logs from deployment." \
