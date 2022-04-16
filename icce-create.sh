@@ -42,6 +42,7 @@ fi
 
 # Reads and write configmaps to Code Engine from icce-project-config.json, skips if empty.
 p_mount_configmap=""
+p_mount_secret=""
 if [ -f .github/workflows/icce-project-config.json ]; then
   if jq -e . .github/workflows/icce-project-config.json >/dev/null 2>&1; then
     configmaps=$(jq -c '.configmapsfromfile[]?' .github/workflows/icce-project-config.json)
