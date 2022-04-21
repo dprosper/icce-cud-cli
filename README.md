@@ -79,7 +79,7 @@ The action can take additional input from `json` files located in the same direc
 
 ## Versioning
 
-For this action you can lock the version to use by specifying it like this: `dprosper/ic-cud-cli@v0.4.2`. 
+For this action you can lock the version to use by specifying it like this: `dprosper/icce-cud-cli@v0.4.2`. 
 
 ## License
 
