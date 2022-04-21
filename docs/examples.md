@@ -23,7 +23,7 @@ This example will build a new image from the source, create a project in Code En
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Deploy to IBM Cloud Code Engine
-        uses: dprosper/icce-cud-cli@v0.2.0
+        uses: dprosper/icce-cud-cli@v0.4.2
         with:
           IMAGE: ${{ env.REGISTRY_ORG_NAMESPACE }}/${{ env.REGISTRY_REPOSITORY }}:${{ github.event.pull_request.head.sha }}
           REGISTRY_USER: ${{ secrets.DOCKERHUB_USER }}
@@ -62,7 +62,7 @@ This example will delete a project in Code Engine.  On delete failures it will c
 
 ```yml
       - name: Delete from IBM Cloud Code Engine
-        uses: dprosper/icce-cud-cli@v0.2.0
+        uses: dprosper/icce-cud-cli@v0.4.2
         with:
           ISSUE_NUMBER: ${{ github.event.pull_request.number }}
           CE_PROJECT_NAME: project-${{ github.event.pull_request.head.sha }}
@@ -81,7 +81,7 @@ On update failures it will create a comment inside the PR and it will generate a
 
 ```yml
       - name: Update in IBM Cloud Code Engine
-        uses: dprosper/icce-cud-cli@v0.2.0
+        uses: dprosper/icce-cud-cli@v0.4.2
         with:
           CE_PROJECT_NAME: project-production
           CE_APP_NAME: app-production
