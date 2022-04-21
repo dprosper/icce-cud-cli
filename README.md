@@ -22,6 +22,7 @@ A GitHub action to deploy an application to IBM Cloud Code Engine.
 
 | Name | Description | Default |
 | --- | --- | --- |
+| `APP_SECRET` | A secret of some sort, if needed by the application. | |
 | `IMAGE` | The name of the image that is used for the application.  | |
 | `REGISTRY` | The URL of the registry server. | `https://index.docker.io/v1/` |
 | `REGISTRY_USER` | The username to access the registry server. | |
@@ -33,6 +34,44 @@ A GitHub action to deploy an application to IBM Cloud Code Engine.
 | `APP_PORT` | The port used by the application. | `3000` |
 
 > Note: Only the IBM Cloud official plug-in repository is supported in this action.
+
+The action can take additional input from `json` files located in the same directory as the workflow file:
+  - If a `icce-project-config.json` is found it is processed, it supports creating [configmaps](https://cloud.ibm.com/docs/codeengine?topic=codeengine-configmap-secret#configmap-create) from a file that will be mounted when the application is deployed and environments (key/value) also generated from a file.
+
+    ```json
+      {
+        "configmapsfromfile": [
+            {
+              "name": "datacenters.json",
+              "file": "./data/datacenters.json",
+              "path": "/data"
+            }
+        ],
+        "envsfromfile": [
+            {
+              "name": "vgic-env",
+              "file": "./data/public.env"
+            }
+        ]
+      }
+    ```
+    
+    `name`: name to give to the configmap
+    `file`: path and filename of the file to use
+    `path`: mount path to use when deploying the application
+
+  - If a `icce-app-config.json` is found it is processed, it supports creating [service bindings](https://cloud.ibm.com/docs/codeengine?topic=codeengine-service-binding) using the [CE_SERVICES method](https://cloud.ibm.com/docs/codeengine?topic=codeengine-service-binding#ce-services).
+    ```json
+      {
+        "bindings": [
+            {
+              "serviceName": "vgic-db"
+            }
+        ]
+      }
+    ```
+    
+    `serviceName`: Name of an already provisioned service to bind to. 
 
 ## Documentation
 

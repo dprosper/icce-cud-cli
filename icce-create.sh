@@ -19,8 +19,8 @@ set -o errexit
 set +o errexit
 ibmcloud code-engine project create --name "$CE_PROJECT_NAME" --no-select
 [ $? -ne 0 ] && echo "Error during project create" \
-&& ibmcloud code-engine project delete --name "$CE_PROJECT_NAME" --force --hard \
-&& exit 1
+ && ibmcloud code-engine project delete --name "$CE_PROJECT_NAME" --force --hard \
+ && exit 1
 
 ibmcloud code-engine project select --name "$CE_PROJECT_NAME"
 [ $? -ne 0 ] && echo "Error during project select" && exit 1
@@ -30,19 +30,32 @@ p_registry_secret=""
 if [ ! -z "${REGISTRY_USER}" ] && [ ! -z "${REGISTRY_PASSWORD}" ] ; then
   set +o errexit
   ibmcloud code-engine registry create \
-  --name "$CE_REGISTRY_SECRET" \
-  --server "$REGISTRY" \
-  --username "$REGISTRY_USER" \
-  --password "$REGISTRY_PASSWORD"
+   --name "$CE_REGISTRY_SECRET" \
+   --server "$REGISTRY" \
+   --username "$REGISTRY_USER" \
+   --password "$REGISTRY_PASSWORD"
   [ $? -ne 0 ] && echo "Error during registry secret create" && exit 1
   set -o errexit
 
   p_registry_secret="--registry-secret $CE_REGISTRY_SECRET"
 fi
 
+p_env_secret=""
+if [ ! -z "${APP_SECRET}" ] ; then
+  set +o errexit
+  ibmcloud code-engine secret create \
+  --name app-secret \
+  --from-literal "APP_SECRET=$APP_SECRET"
+  [ $? -ne 0 ] && echo "Error during app secret create" && exit 1
+  set -o errexit
+
+  p_env_secret="--env-from-secret app-secret"
+fi
+
 # Reads and write configmaps to Code Engine from icce-project-config.json, skips if empty.
 p_mount_configmap=""
-p_mount_secret=""
+p_env_configmap=""
+
 if [ -f .github/workflows/icce-project-config.json ]; then
   if jq -e . .github/workflows/icce-project-config.json >/dev/null 2>&1; then
     configmaps=$(jq -c '.configmapsfromfile[]?' .github/workflows/icce-project-config.json)
@@ -56,21 +69,20 @@ if [ -f .github/workflows/icce-project-config.json ]; then
       [ $? -ne 0 ] && echo "Error during configmap create" && exit 1
       set -o errexit
 
-     p_mount_configmap="--mount-configmap $path=$name"
+      p_mount_configmap+="--mount-configmap $path=$name "
     done
 
-    secrets=$(jq -c '.secretsfromfile[]?' .github/workflows/icce-project-config.json)
-    for secret in $secrets; do
-      name=$(echo ${secret} | jq -r '.name | select (.!=null)')
-      file=$(echo ${secret} | jq -r '.file | select (.!=null)')
-      path=$(echo ${secret} | jq -r '.path | select (.!=null)')
+    envs=$(jq -c '.envsfromfile[]?' .github/workflows/icce-project-config.json)
+    for env in $envs; do
+      name=$(echo ${env} | jq -r '.name | select (.!=null)')
+      file=$(echo ${env} | jq -r '.file | select (.!=null)')
 
       set +o errexit
-      ibmcloud code-engine secret create --name "$name" --from-file "$file"
-      [ $? -ne 0 ] && echo "Error during secret create" && exit 1
+      ibmcloud code-engine configmap create --name "$name" --from-env-file "$file"
+      [ $? -ne 0 ] && echo "Error during configmap create" && exit 1
       set -o errexit
 
-     p_mount_secret="--mount-secret $path=$name"
+      p_env_configmap+="--env-from-configmap $name "
     done
 
   else
@@ -79,24 +91,43 @@ if [ -f .github/workflows/icce-project-config.json ]; then
 fi
 
 set +o errexit
-ibmcloud code-engine app create \
---name "$CE_APP_NAME" \
---image "$IMAGE" \
---port "$APP_PORT" \
-${p_registry_secret} \
-${p_mount_configmap} \
-${p_mount_secret} \
---wait \
---wait-timeout 120
+ibmcloud code-engine application create \
+ --name "$CE_APP_NAME" \
+ --image "$IMAGE" \
+ --port "$APP_PORT" \
+ ${p_env_secret} \
+ ${p_registry_secret} \
+ ${p_mount_configmap} \
+ ${p_env_configmap} \
+ --wait \
+ --wait-timeout 120
 [ $? -ne 0 ] && echo "Error encountered during app create, printing events and logs from deployment." \
-&& events=$(ibmcloud ce application events -n "$CE_APP_NAME") \
-&& echo "::set-output name=events::$events" \
-&& logs=$(ibmcloud ce application logs -n "$CE_APP_NAME") \
-&& echo "::set-output name=logs::$logs" \
-&& ibmcloud code-engine project delete --name "$CE_PROJECT_NAME" --force --hard \
-&& exit 1
+ && events=$(ibmcloud ce application events -n "$CE_APP_NAME") \
+ && echo "::set-output name=events::$events" \
+ && logs=$(ibmcloud ce application logs -n "$CE_APP_NAME") \
+ && echo "::set-output name=logs::$logs" \
+ && ibmcloud code-engine project delete --name "$CE_PROJECT_NAME" --force --hard \
+ && exit 1
 
-app_url=$(ibmcloud code-engine app get --name "$CE_APP_NAME" --output json | jq -r '.status.url')
+sleep 30
+
+if [ -f .github/workflows/icce-app-config.json ]; then
+  if jq -e . .github/workflows/icce-app-config.json >/dev/null 2>&1; then
+    bindings=$(jq -c '.bindings[]?' .github/workflows/icce-app-config.json)
+    for binding in $bindings; do
+      serviceName=$(echo ${binding} | jq -r '.serviceName | select (.!=null)')
+
+      set +o errexit
+      ibmcloud code-engine application bind --name "$CE_APP_NAME" --service-instance "$serviceName"
+      [ $? -ne 0 ] && echo "Error during bind to service $serviceName" && exit 1
+      set -o errexit
+    done
+  else
+    echo "Failed to use icce-app-config.json, either the file failed json parsing or something else went wrong." && exit 1
+  fi
+fi
+
+app_url=$(ibmcloud code-engine application get --name "$CE_APP_NAME" --output json | jq -r '.status.url')
 [ $? -ne 0 ] && echo "Error obtaining app url" && exit 1
 set -o errexit
 

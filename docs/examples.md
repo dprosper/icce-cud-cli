@@ -11,8 +11,6 @@ This example will build a new image from the source, create a project in Code En
 - Create a project and an app naimg themn based on the sha from the PR
 - Deploy the app and insert the URL to the deployed app in a comment of the PR
 
-The action can take additional input from a `json` file located in the same directory as the workflow file.  If a the `icce-project-config.json` is found it is processed, currently it supports creating configmaps only.  
-
 ```yml
       - name: Build and push image
         uses: docker/build-push-action@v2.8.0
@@ -34,6 +32,20 @@ The action can take additional input from a `json` file located in the same dire
           CE_PROJECT_NAME: project-${{ github.event.pull_request.head.sha }}
           CE_APP_NAME: app-${{ github.event.pull_request.head.sha }}
 ```
+
+This application deployment takes additional input from a `json` file located in the same directory as the workflow file: `icce-project-config.json`. Once deployed, the application will use `/data/datacenters.json` as the path to read the content of the file.  Please note the path used is a composite of the values found in `name` and `path`.
+
+  ```json
+    {
+      "configmapsfromfile": [
+          {
+            "name": "datacenters.json",
+            "file": "./data/datacenters.json",
+            "path": "/data"
+          }
+      ]
+    }
+  ```
 
 ![](./assets/icce-cud-create-running.png)
 
