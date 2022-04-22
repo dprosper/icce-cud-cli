@@ -4,18 +4,42 @@ A GitHub action to deploy an application to IBM Cloud Code Engine.
 
 ## Usage
 
+### Create a project and app in Code Engine
 ```yml
       - name: Deploy to IBM Cloud Code Engine
         uses: dprosper/icce-cud-cli@v0.4.2
         with:
           IMAGE: ${{ env.REGISTRY_ORG_NAMESPACE }}/${{ env.REGISTRY_REPOSITORY }}:${{ github.event.pull_request.head.sha }}
-          REGISTRY_USER: ${{ secrets.DOCKERHUB_USER }}
-          REGISTRY_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
+          REGISTRY_USER: ${{ secrets.REGISTRY_USER }}
+          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_TOKEN }}
           CE_ACTION: create
           CE_PROJECT_NAME: project-${{ github.event.pull_request.head.sha }}
           CE_APP_NAME: app-${{ github.event.pull_request.head.sha }}
           REGISTRY: ${{ env.REGISTRY }}
           CE_REGISTRY_SECRET: ${{ env.CE_REGISTRY_SECRET }}
+```
+
+### Delete a project in Code Engine
+
+```yml
+      - name: Delete from IBM Cloud Code Engine
+        uses: dprosper/icce-cud-cli@v0.4.2
+        with:
+          ISSUE_NUMBER: ${{ github.event.pull_request.number }}
+          CE_PROJECT_NAME: projectc-${{ github.event.pull_request.head.sha }}
+          CE_ACTION: delete
+```
+
+### Update an app in Code Engine
+
+```yml
+      - name: Update in IBM Cloud Code Engine
+        uses: dprosper/icce-cud-cli@v0.4.2
+        with:
+          CE_PROJECT_NAME: project-production
+          CE_APP_NAME: app-production
+          IMAGE: ${{ env.REGISTRY_ORG_NAMESPACE }}/${{ env.REGISTRY_REPOSITORY }}:latest
+          CE_ACTION: update
 ```
 
 ### Inputs
