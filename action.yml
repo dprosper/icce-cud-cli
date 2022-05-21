@@ -144,7 +144,7 @@ runs:
       run: ${{ github.action_path }}/icce-delete.sh
       shell: bash
       env:
-        CE_PROJECT_NAME: ${{ inputs.CE_PROJECT_NAME }}
+        CE_PROJECT_NAME: ${{ steps.set-result.outputs.result }}
 
     - name: Message success
       if: ${{ success() && steps.set-result.outputs.result != '' && inputs.CE_ACTION == 'delete' }}
