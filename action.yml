@@ -110,6 +110,7 @@ runs:
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
+            body: `<!--- ${{ inputs.CE_PROJECT_NAME }} --->
             body: `:bug:  Project or app creation failed! Please review the actions log for the events and logs from your project.`,
           });
 
